@@ -8,17 +8,13 @@
 #include "afxdialogex.h"
 #include "MidiDevice.h"
 
-
 #ifdef _DEBUG
 #define new DEBUG_NEW
-//先定义消息
-
 #endif
 
-
+int start_time = 0;
+int end_time = 0;
 // 用于应用程序“关于”菜单项的 CAboutDlg 对话框
-CMidiDevice m_midiDev;
-
 
 class CAboutDlg : public CDialogEx
 {
@@ -50,10 +46,7 @@ END_MESSAGE_MAP()
 
 
 // Ctest4Dlg 对话框
-
-
-
-
+CMidiDevice* m_midiDev;
 Ctest4Dlg::Ctest4Dlg(CWnd* pParent /*=NULL*/)
 	: CDialogEx(Ctest4Dlg::IDD, pParent)
 {
@@ -98,11 +91,8 @@ BOOL Ctest4Dlg::OnInitDialog()
 	// IDM_ABOUTBOX 必须在系统命令范围内。
 	ASSERT((IDM_ABOUTBOX & 0xFFF0) == IDM_ABOUTBOX);
 	ASSERT(IDM_ABOUTBOX < 0xF000);
-	Ctest4App* app = (Ctest4App*)AfxGetApp();
-	app->pDlg= this;
+	 m_midiDev=new CMidiDevice(this);
 	CMenu* pSysMenu = GetSystemMenu(FALSE);
-
-	
 	if (pSysMenu != NULL)
 	{
 		BOOL bNameValid;
@@ -125,22 +115,22 @@ BOOL Ctest4Dlg::OnInitDialog()
 	int i = 0;
 
 	// enumerate all midi device
-	m_midiDev.EnumMidiDev();
+	m_midiDev->EnumMidiDev();
 
 	// get the name of all midi device in
 
-	for(i = 0; i < m_midiDev.GetNumOfMidiDevIn(); i++)
+	for(i = 0; i < m_midiDev->GetNumOfMidiDevIn(); i++)
 	{
-		m_comboDevIn.AddString((LPCTSTR)(m_midiDev.m_midiDevIn[i].szPnameIn));
-		printf("输入设备%d: %s\n",i,m_midiDev.m_midiDevIn[i].szPnameIn);
+		m_comboDevIn.AddString((LPCTSTR)(m_midiDev->m_midiDevIn[i].szPnameIn));
+		printf("输入设备%d: %s\n",i,m_midiDev->m_midiDevIn[i].szPnameIn);
 		//MessageBox((LPCTSTR)(m_midiDev.m_midiDevIn[i].szPnameIn),(LPCTSTR)("输入"));
 	}
 
 	// get the name of all midi device out
-	for(i = 0; i < m_midiDev.GetNumOfMidiDevOut(); i++)
+	for(i = 0; i < m_midiDev->GetNumOfMidiDevOut(); i++)
 	{
-		m_comboDevOut.AddString((LPCTSTR)(m_midiDev.m_midiDevOut[i].szPnameOut));
-		printf("输出设备%d: %s\n",i,m_midiDev.m_midiDevOut[i].szPnameOut);
+		m_comboDevOut.AddString((LPCTSTR)(m_midiDev->m_midiDevOut[i].szPnameOut));
+		printf("输出设备%d: %s\n",i,m_midiDev->m_midiDevOut[i].szPnameOut);
 		//MessageBox((LPCTSTR)(m_midiDev.m_midiDevOut[i].szPnameOut),(LPCTSTR)("输出"));
 	}
 	return TRUE;  // 除非将焦点设置到控件，否则返回 TRUE
@@ -193,26 +183,24 @@ void Ctest4Dlg::OnPaint()
 		int row = 20;
 		int Line_height = 10;
 		int row_height = 140;
-		int Line_start = 20;
-		int Line_end = 620;
 		for (int s = 0; s <6; s++){
 			CPen SOLID_Pen(PS_SOLID, 2, RGB(0, 0, 0));
 			CPen DASH_Pen(PS_DASH, width,RGB(96,96,96));
 			for (int i = 0; i < 4; i++){
 				//画九线谱一条实线
 				dc.SelectObject(&SOLID_Pen);
-				dc.MoveTo(Line_start, row + (2 * i + 0) *Line_height);
-				dc.LineTo(Line_end, row + (2 * i + 0)*Line_height);
+				dc.MoveTo(20, row + (2 * i + 0) *Line_height);
+				dc.LineTo(600, row + (2 * i + 0)*Line_height);
 				//画九线谱一条虚线
 				dc.SelectObject(&DASH_Pen);
-				dc.MoveTo(Line_start, row + (2 * i + 1) *Line_height);
-				dc.LineTo(Line_end, row + (2 * i + 1)*Line_height);
+				dc.MoveTo(20, row + (2 * i + 1) *Line_height);
+				dc.LineTo(600, row + (2 * i + 1)*Line_height);
 			}
 
 			//画九线谱第九条线
 			dc.SelectObject(&SOLID_Pen);
-			dc.MoveTo(Line_start, row + 8 * Line_height);
-			dc.LineTo(Line_end, row + 8 * Line_height);
+			dc.MoveTo(20, row + 8 * Line_height);
+			dc.LineTo(600, row + 8 * Line_height);
 
 			row += row_height;
 
@@ -221,34 +209,51 @@ void Ctest4Dlg::OnPaint()
 
 	}
 }
-    void Ctest4Dlg::Draw(char score,long start_time,long end_time){
+void Ctest4Dlg::Draw(long msg_voice, long time){
 	CClientDC   dc(this);
 	CPen SOLID_Pen(PS_SOLID, 4, RGB(255, 0, 0));
-	int big_line = start_time / 600;
-	int draw_start = start_time % 600;
-	int draw_end = end_time % 600;
-	int small_line = 0;
-	switch (score){
-	case '44': small_line = 1; break;
-	case '43': small_line = 2; break;
-	case '42': small_line = 3; break;
-	case '41': small_line = 4; break;
-	case '40': small_line = 5; break;
-	case '3F': small_line = 6; break;
-	case '3E': small_line = 7; break;
-	case '3D': small_line = 8; break;
-	case '3C': small_line = 9; break;
-	default:  small_line = 1;
+	int score = (msg_voice >> 8) % 256;
+	int strong = msg_voice >> 16;
+	if (strong != 0){
+		start_time = time-1000;
 	}
-	if (score == '3C'){
-		small_line = 9;
+	   
+	else {
+		end_time = time-1000;
+		int big_line = start_time / 600;
+		int draw_start =start_time % 600;
+		int draw_end = end_time % 600;
+		int small_line = 0;
+		switch (score){
+		case  68 : small_line = 1; break;
+		case  67 : small_line = 2; break;
+		case  66 : small_line = 3; break;
+		case  65    : small_line = 4; break;
+		case  64    : small_line = 5; break;
+		case  63    : small_line = 6; break;
+		case  62    : small_line = 7; break;
+		case  61    : small_line = 8; break;
+		case  60    : small_line = 9; break;
+		default:  small_line = 1;
+		}
+		if (end_time < start_time){
+			int line_height = 20 + big_line * 140 + (small_line - 1) * 10;
+			dc.SelectObject(&SOLID_Pen);
+			dc.MoveTo(20 + draw_start, line_height);
+			dc.LineTo(20+600, line_height);
+			line_height += big_line;
+			dc.MoveTo(20 , line_height);
+			dc.LineTo(20+draw_end, line_height);
+		}
+		else{
+			int line_height = 20 + big_line * 140 + (small_line - 1) * 10;
+			dc.SelectObject(&SOLID_Pen);
+			dc.MoveTo(20 + draw_start, line_height);
+			dc.LineTo(20 + draw_end, line_height);
+		}
 	}
-	int line_height = 20 + big_line * 140 + (small_line - 1) * 10;
-		dc.SelectObject(&SOLID_Pen);
-		dc.MoveTo(20, line_height);
-		dc.LineTo(600, line_height);
-	
 }
+
 //当用户拖动最小化窗口时系统调用此函数取得光标
 //显示。
 HCURSOR Ctest4Dlg::OnQueryDragIcon()
@@ -257,19 +262,11 @@ HCURSOR Ctest4Dlg::OnQueryDragIcon()
 }
 
 
-//定义函数   .cpp文件
-LRESULT Ctest4Dlg::OnMyMessage(LPARAM lParam, WPARAM pParam)
-{
-	//加入其它代码
 
-
-	return 0;
-}
 
 void Ctest4Dlg::OnBnClickedOk()
 {
-	
-	Draw('3C',100,200);
+	//Draw('3C', 100, 200);
 }
 
 
@@ -288,23 +285,23 @@ BOOL Ctest4Dlg::PreTranslateMessage(MSG* pMsg)
 			if(pMsg->wParam==i)
 			{
 				int nSel = m_comboDevOut.GetCurSel();
-				BOOL bOpenOut = m_midiDev.OpenDevOut(m_midiDev.m_midiDevOut[1].nDevID);
+				BOOL bOpenOut = m_midiDev->OpenDevOut(m_midiDev->m_midiDevOut[1].nDevID);
 
 				// get the value of program, note, velocity, volume and pan
 
 				// change the program
-				m_midiDev.ProgramChange(0, 1);
+				m_midiDev->ProgramChange(0, 1);
 
 				// set the master volume
-				m_midiDev.SetVolume(0,125);
+				m_midiDev->SetVolume(0,125);
 
 				// set the pan
-				m_midiDev.SetPan(0, 2);
+				m_midiDev->SetPan(0, 2);
 
 				//send note on message on channel 0
 				DWORD dwEvent = 0x90 | ((DWORD)i << 8) | ((DWORD)90 << 16);
 				printf("midi out sending message:0x90 %d %d\n",i,90);
-				m_midiDev.SendShortMsg(dwEvent);
+				m_midiDev->SendShortMsg(dwEvent);
 
 				return TRUE;
 			}
@@ -312,9 +309,9 @@ BOOL Ctest4Dlg::PreTranslateMessage(MSG* pMsg)
 	}
 	else if (pMsg->message == WM_KEYUP)
 	{
-		if(m_midiDev.IsMidiOutOpen())
+		if(m_midiDev->IsMidiOutOpen())
 		{
-			m_midiDev.AllNotesOff(0);
+			m_midiDev->AllNotesOff(0);
 		}
 	}
 	return CDialogEx::PreTranslateMessage(pMsg);
@@ -324,7 +321,7 @@ void Ctest4Dlg::OnBnClickedButton1()
 {
 	// open the selected midi device in
 	int nSel = m_comboDevIn.GetCurSel();
-	BOOL bOpenIn = m_midiDev.OpenDevIn(m_midiDev.m_midiDevIn[0].nDevID);
+	BOOL bOpenIn = m_midiDev->OpenDevIn(m_midiDev->m_midiDevIn[0].nDevID);
 	if(!bOpenIn)
 	{
 		//MessageBox("Open Midi Device in failed");
@@ -336,13 +333,13 @@ void Ctest4Dlg::OnBnClickedButton1()
 		printf("Open Midi Device successfully!\n");
 	}
 	// start to record
-	m_midiDev.StartRecording();
+	m_midiDev->StartRecording();
 }
 
 
 void Ctest4Dlg::OnBnClickedButton2()
 {
-	m_midiDev.StopRecording();
+	m_midiDev->StopRecording();
 	printf("stop recording!!\n");
 	TCHAR szFilter[] = _T("*.mid|*.mid|*.*|*.*||");    
    
@@ -353,7 +350,7 @@ void Ctest4Dlg::OnBnClickedButton2()
 	//{    
 		// 如果点击了文件对话框上的“保存”按钮，则将选择的文件路径显示到编辑框里    
 		//m_midiDev.SaveRecEventToFile(fileDlg.GetPathName());
-	m_midiDev.SaveRecEventToFile("D:\\Personal\\Desktop\\九线谱\\数字音频规范与程序设计光盘内容\\第4章\\示范MIDI文件\\abdtest1.mid");
+	m_midiDev->SaveRecEventToFile("D:\\Personal\\Desktop\\九线谱\\数字音频规范与程序设计光盘内容\\第4章\\示范MIDI文件\\abdtest1.mid");
 		//SetDlgItemText(IDC_SAVE_EDIT, strFilePath);    
 	//}    
 

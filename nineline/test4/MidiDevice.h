@@ -6,6 +6,7 @@
 #define WM_USER_MIDI_IN (2009+02)
 
 #include "windows.h"
+#include "test4Dlg.h"
 #include <mmsystem.h>
 #pragma comment(lib, "winmm.lib")
 
@@ -31,7 +32,8 @@ struct MIDIRECORDEVENT
 class CMidiDevice  
 {
 public:
-	CMidiDevice();
+	CMidiDevice::CMidiDevice();
+	CMidiDevice(Ctest4Dlg* pDlg);
 	virtual ~CMidiDevice();
 
 	typedef struct
@@ -45,7 +47,6 @@ public:
 		int nDevID;  // the midi device number
 		char szPnameOut[MAXPNAMELEN];  // the name of midi device out			
 	}MIDI_DEVICE_OUT;
-
 	CWnd *m_pWnd;
 	BOOL m_bNotifyWindow;  // notify the window or not when receiving midi
 	HMIDIIN m_hMidiIn;  // the handle of midi device in

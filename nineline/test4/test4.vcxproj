@@ -108,7 +108,6 @@
     <ClInclude Include="targetver.h" />
     <ClInclude Include="test4.h" />
     <ClInclude Include="test4Dlg.h" />
-    <ClInclude Include="global.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="MidiDevice.cpp" />

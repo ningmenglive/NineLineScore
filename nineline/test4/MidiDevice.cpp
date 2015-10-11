@@ -3,12 +3,9 @@
 //////////////////////////////////////////////////////////////////////
 
 #include "stdafx.h"
-#include "test4.h"
 #include "MidiDevice.h"
-#include "test4Dlg.h"
 int dklfjd=0;
-Ctest4App* app = (Ctest4App*)AfxGetApp();
-
+Ctest4Dlg *mDlg;
 void CALLBACK MidiInCallback(HMIDIIN hMidiIn,WORD wMsg,DWORD dwInstance,DWORD dwParam1,DWORD dwParam2)
 {
 	dklfjd++;
@@ -31,13 +28,9 @@ void CALLBACK MidiInCallback(HMIDIIN hMidiIn,WORD wMsg,DWORD dwInstance,DWORD dw
 			pMsgParams->data2 = (BYTE)(dwParam1 >> 16);
 			pMsgParams->time = dwParam2;
 			if(pMsgParams->message!=-2){
-	
-				   
 
-					printf("%x %x %x %d\n",pMsgParams->message,pMsgParams->data1,pMsgParams->data2,pMsgParams->time);
-					app->pDlg.Draw('3C', 100, 200);
-					
-					
+				printf("%x %x %x %d  %d\n", pMsgParams->message, pMsgParams->data1, pMsgParams->data2, pMsgParams->time, dwParam1);
+					mDlg->Draw(dwParam1,pMsgParams->time);
 				MIDIRECORDEVENT *pEvent = NULL;
 				pEvent = new MIDIRECORDEVENT;
 				if(pEvent != NULL)
@@ -73,6 +66,18 @@ CMidiDevice::CMidiDevice()
 	m_hMidiIn = NULL;
 	m_hMidiOut = NULL;
 	m_bNotifyWindow = FALSE;
+	m_StateIn = CLOSEDIN;
+	m_StateOut = CLOSEDOUT;
+	m_nTotalNumOfDevIn = 0;
+	m_nTotalNumOfDevOut = 0;
+}
+CMidiDevice::CMidiDevice(Ctest4Dlg* pDlg)
+{
+	m_pWnd = NULL;
+	m_hMidiIn = NULL;
+	m_hMidiOut = NULL;
+	m_bNotifyWindow = FALSE;
+	mDlg = pDlg;
 	m_StateIn = CLOSEDIN;
 	m_StateOut = CLOSEDOUT;
 	m_nTotalNumOfDevIn = 0;
